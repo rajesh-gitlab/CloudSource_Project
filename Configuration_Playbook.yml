@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: true
+  vars:
+    install_path: /opt/csg_security_agent
+    file_path: "{{ install_path }}/security_agent_installer.sh"
+    token: "CSG_$h4p3#7e"
+    config_path: "{{ install_path }}/security_agent_config.conf"
+  tasks:
+    # Create a directory
+    - name: Create directory
+      file:
+        path: "{{ install_path }}"
+        state: directory
+
+    # Copy file to destination
+    - name: Copy file to server
+      copy:
+        src: ./security_agent_installer_linux_amd64_v1.0.0.sh
+        dest: "{{ file_path }}"
+        force: yes
+
+    # Rename the file
+    - name: Rename file
+      file:
+        src: "{{ install_path }}/security_agent_installer_linux_amd64_v1.0.0.sh"
+        dest: "{{ file_path }}"
+
+    # Copy config file 
+    - name: Copying config file
+      copy:
+        src: ./security_agent_config.conf
+        dest: "{{ install_path }}"
+        force: yes
+
+    # Insert token into config file
+    - name: Insert token into config file
+      replace:
+        path: "{{ config_path }}"
+        regexp: 'unique_token:.*'
+        replace: 'unique_token: {{ token }}'
+
+    # Execute script
+    - name: Execute script with arguments
+      command: "sh {{ file_path }} --config {{ config_path }} --token {{ token }}"
